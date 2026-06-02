@@ -132,9 +132,13 @@ async def run_header_async(
     events.publish_module_start(scan_id, module, f"Fetching headers for {url}")
     worker_db.set_module_status(scan_id, module, ModuleStatus.RUNNING, progress=10)
 
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, verify=False) as client:
         events.publish_module_progress(scan_id, module, 40)
-        response = await client.get(url)
+        try:
+            response = await client.get(url)
+        except (httpx.ConnectTimeout, httpx.ConnectError):
+            http_url = url.replace("https://", "http://")
+            response = await client.get(http_url)
         headers = {k.lower(): v for k, v in response.headers.items()}
 
     result = {
