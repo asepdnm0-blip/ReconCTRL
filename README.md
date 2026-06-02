@@ -17,86 +17,138 @@ reconctrl/
 ├── .env.example                  # Template environment variables
 └── README.md                     # Monorepo documentation
 ```
+# ReconCTRL
 
-## Quick Start (with Docker Compose)
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![License](https://img.shields.io/badge/License-Educational-red)
 
-To spin up the entire application stack including databases and workers, follow these steps:
+> **Agentic reconnaissance platform** — scan target, stream hasil real-time, export laporan PDF.
 
-1. **Clone and Navigate**:
-   Go to your workspace root directory.
+---
 
-2. **Prepare Environment File**:
-   Copy the example environment variables to create a `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
-   Feel free to edit the parameters inside `.env` to suit your development requirements.
+## Screenshot
 
-3. **Orchestrate Stack**:
-   Start the services using Docker Compose (this automatically builds the Dockerfiles located in `/docker`):
-   ```bash
-   docker-compose up --build
-   ```
+<!-- Ganti dengan screenshot dashboard kamu -->
+![ReconCTRL Dashboard](docs/screenshot.png)
 
-4. **Initialize Database Tables**:
-   Run database migrations using Alembic inside the running backend container:
-   ```bash
-   docker-compose exec backend alembic upgrade head
-   ```
+---
 
-5. **Exposed Services**:
-   - **Frontend UI**: `http://localhost` (exposes React static site served by Nginx)
-   - **FastAPI API**: `http://localhost:8000` (exposes backend endpoints)
-   - **API Documentation**: `http://localhost:8000/docs` (Swagger Interactive API Documentation)
+## Fitur
 
-## Local Development (No Docker)
+- **7 Recon Modules** — Port Scan (nmap + NVD CVE), HTTP Headers, Subdomain Enum, OSINT, Directory Enum, OWASP Checks, AI Summary
+- **Real-time Streaming** — hasil scan muncul live via Server-Sent Events (SSE)
+- **Export** — download laporan sebagai JSON atau PDF
+- **JWT Auth** — login, register, refresh token
+- **Task Queue** — Celery + Redis untuk distributed scanning
+- **Docker** — semua service jalan dalam container
 
-If you prefer running services individually outside of containers:
+---
 
-### 1. Database and Broker Setup
-You will need a PostgreSQL database and a Redis instance running locally:
-- Update your `.env` file to point `DATABASE_URL` and `REDIS_URL` to `localhost` instead of their docker container names (`db`, `redis`).
+## Tech Stack
 
-### 2. Frontend Local Server
-1. Navigate into the frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   pnpm install
-   # or
-   npm install
-   ```
-3. Run the development server (Vite):
-   ```bash
-   pnpm run dev
-   # or
-   npm run dev
-   ```
+| Layer | Teknologi |
+|-------|-----------|
+| Frontend | React 18, Vite, TailwindCSS |
+| Backend | FastAPI, Python 3.11, SQLAlchemy async |
+| Database | PostgreSQL 15 |
+| Cache & Queue | Redis 7, Celery |
+| Recon Engine | nmap, httpx, dnspython, python-whois |
+| Container | Docker Compose (OrbStack) |
+| Real-time | Server-Sent Events |
 
-### 3. Backend Local Server
-1. Navigate into the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies using Poetry:
-   ```bash
-   poetry install
-   ```
-3. Spawn shell env and run FastAPI reload server:
-   ```bash
-   poetry shell
-   uvicorn app.main:app --reload --port 8000
-   ```
+---
 
-### 4. Celery Worker Local Server
-1. Ensure you have activated the backend's Poetry virtual environment.
-2. Navigate into the worker folder:
-   ```bash
-   cd worker
-   ```
-3. Start the Celery worker process:
-   ```bash
-   celery -A tasks.celery_app worker --loglevel=info
-   ```
+## Arsitektur
+
+Browser (React + SSE)
+│
+▼
+FastAPI Backend ──► Celery Worker
+│                    │
+▼                    ▼
+PostgreSQL           Redis Pub/Sub
+│
+▼
+SSE Stream → Browser
+
+---
+
+## Cara Menjalankan
+
+### Prasyarat
+- OrbStack atau Docker Desktop
+- Node.js 20
+- Python 3.11
+
+### 1. Clone repo
+```bash
+git clone https://github.com/USERNAME/ReconCTRL.git
+cd ReconCTRL
+```
+
+### 2. Setup environment
+```bash
+cp .env.example .env
+```
+
+### 3. Jalankan semua container
+```bash
+docker compose up -d
+```
+
+### 4. Jalankan frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 5. Buka browser
+http://localhost:5173
+
+Login: `admin` / `admin123`
+
+---
+
+## Modul Recon
+
+| Modul | Deskripsi |
+|-------|-----------|
+| `port_scan` | nmap -sV -sC + NVD CVE enrichment |
+| `header` | Security headers via httpx |
+| `subdomain` | crt.sh + DNS resolution |
+| `osint` | WHOIS + IP geolocation |
+| `dir_enum` | Common path discovery |
+| `owasp` | OWASP Top 10 header checks |
+| `ai_summary` | Executive report via Claude API |
+
+---
+
+## Environment Variables
+
+```env
+POSTGRES_DB=reconctrl
+POSTGRES_USER=recon
+POSTGRES_PASSWORD=your_password
+DATABASE_URL=postgresql+asyncpg://recon:password@postgres:5432/reconctrl
+REDIS_URL=redis://redis:6379/0
+JWT_SECRET_KEY=your_secret_key
+CLAUDE_API_KEY=sk-ant-xxxx
+ENVIRONMENT=development
+```
+
+---
+
+## ⚠️ Disclaimer
+
+> ReconCTRL dibuat untuk tujuan **educational dan authorized penetration testing** saja.
+> Jangan gunakan untuk scanning sistem yang bukan milikmu atau tanpa izin eksplisit.
+
+---
+
+## Lisensi
+
+Educational use only.
