@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reconctrl-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: reconctrl
+      POSTGRES_USER: recon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      USER: recon
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - recon-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recon -d reconctrl"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: reconctrl-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - recon-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: reconctrl-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://recon:${POSTGRES_PASSWORD}@postgres:5432/reconctrl
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-supersecretkeychangeinproduction}
+      - JWT_SECRET_KEY=${SECRET_KEY:-supersecretkeychangeinproduction}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - recon-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker/worker.Dockerfile
+    container_name: reconctrl-worker
+    restart: always
+    volumes:
+      - ./backend:/app/backend
+      - ./worker:/app/worker
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://recon:${POSTGRES_PASSWORD}@postgres:5432/reconctrl
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-supersecretkeychangeinproduction}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - PYTHONPATH=/app/backend
+    command: celery -A app.worker.celery_app worker --loglevel=info -Q celery
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - recon-net
+
+  frontend:
+    image: node:20-alpine
+    container_name: reconctrl-frontend-dev
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: sh -c "pnpm install && pnpm dev --host"
+    depends_on:
+      - backend
+    networks:
+      - recon-net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  recon-net:
+    driver: bridge

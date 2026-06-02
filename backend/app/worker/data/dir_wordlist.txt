@@ -1,0 +1,25 @@
+# Common paths for directory enumeration (keep list small for dev)
+admin
+api
+backup
+config
+dashboard
+dev
+login
+robots.txt
+sitemap.xml
+static
+test
+uploads
+.git
+.env
+wp-admin
+wp-content
+phpmyadmin
+console
+health
+metrics
+swagger
+docs
+v1
+v2
