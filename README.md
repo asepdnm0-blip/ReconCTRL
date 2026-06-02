@@ -1,6 +1,14 @@
 # ReconCTRL Monorepo
 
-ReconCTRL is an automated security reconnaissance orchestration system. It consists of a React frontend, an asynchronous FastAPI backend, and a Celery background worker connected to a PostgreSQL database and Redis broker.
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![License](https://img.shields.io/badge/License-Educational-red)
+
+>  **Agentic reconnaissance platform** — scan target, stream hasil real-time, export laporan PDF.
+
+---
 
 ## Project Structure
 
@@ -25,14 +33,10 @@ reconctrl/
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
 ![License](https://img.shields.io/badge/License-Educational-red)
 
-> **Agentic reconnaissance platform** — scan target, stream hasil real-time, export laporan PDF.
-
----
-
 ## Screenshot
 
 <!-- Ganti dengan screenshot dashboard kamu -->
-![ReconCTRL Dashboard](docs/screenshot.png)
+![ReconCTRL Dashboard](../screenshot.png)
 
 ---
 
