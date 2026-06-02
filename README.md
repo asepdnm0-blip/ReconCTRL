@@ -36,7 +36,7 @@ reconctrl/
 ## Screenshot
 
 <!-- Ganti dengan screenshot dashboard kamu -->
-![ReconCTRL Dashboard](../screenshot.png)
+![ReconCTRL Dashboard](docs/screenshot.png)
 
 ---
 
